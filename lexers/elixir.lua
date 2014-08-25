@@ -1,5 +1,5 @@
--- Copyright 2006-2014 Mitchell mitchell.att.foicica.com. See LICENSE.
--- Ruby LPeg lexer.
+-- Copyright 2014 Matt Gushee <matt@gushee.net>. See LICENSE.
+-- Elixir LPeg lexer.
 
 local l = require('lexer')
 local token, word_match = l.token, l.word_match
@@ -14,7 +14,7 @@ local ws = token(l.WHITESPACE, l.space^1)
 local comment = token(l.COMMENT, '#' * l.nonnewline^0)
 
 local delimiter_matches = {['('] = ')', ['['] = ']', ['{'] = '}'}
-local literal_delimitted = P(function(input, index)
+local literal_delimited = P(function(input, index)
   local delimiter = input:sub(index, index)
   if not delimiter:find('[%w\r\n\f\t ]') then -- only non alpha-numerics
     local match_pos, patt
@@ -32,11 +32,11 @@ end)
 
 -- Strings.
 local cmd_str = l.delimited_range('`')
-local lit_cmd = '%x' * literal_delimitted
-local lit_array = '%w' * literal_delimitted
+local lit_cmd = '%x' * literal_delimited
+local lit_array = '%w' * literal_delimited
 local sq_str = l.delimited_range("'")
 local dq_str = l.delimited_range('"')
-local lit_str = '%' * S('qQ')^-1 * literal_delimitted
+local lit_str = '%' * S('qQ')^-1 * literal_delimited
 local heredoc = '<<' * P(function(input, index)
   local s, e, indented, _, delimiter =
     input:find('(%-?)(["`]?)([%a_][%w_]*)%2[\n\r\f;]+', index)
@@ -49,7 +49,7 @@ end)
 -- TODO: regex_str fails with `obj.method /patt/` syntax.
 local regex_str = l.last_char_includes('!%^&*([{-=+|:;,?<>~') *
                   l.delimited_range('/', true, false) * S('iomx')^0
-local lit_regex = '%r' * literal_delimitted * S('iomx')^0
+local lit_regex = '%r' * literal_delimited * S('iomx')^0
 local string = token(l.STRING, (sq_str + dq_str + lit_str + heredoc + cmd_str +
                                 lit_cmd + lit_array) * S('f')^-1) +
                token(l.REGEX, regex_str + lit_regex)
